@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: login-table-created
+      author: shyam k
+      changes:
+        - createTable:
+            tableName: login
+            columns:
+              - column:
+                  name: id
+                  type: numeric
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: varchar(255)
+              - column:
+                  name: password
+                  type: varchar(255)
+
