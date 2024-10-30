@@ -8,7 +8,6 @@ import org.jooq.DSLContext
 import org.jooq.generated.tables.references.USER
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import kotlin.random.Random
 
@@ -16,6 +15,9 @@ import kotlin.random.Random
 @RequestMapping("/airline")
 class AirlineController(private val dslContext: DSLContext,
                         private val mailService: MailService) {
+
+    private val otpStorage = mutableMapOf<String, Long>()
+    private val userStorage = mutableMapOf<String, User>()
 
     @PostMapping("/login")
     fun getLoginDetails(@RequestBody loginDetails: LoginDetails): ResponseEntity<String> {
@@ -36,35 +38,48 @@ class AirlineController(private val dslContext: DSLContext,
         }
     }
 
-    @PostMapping
-    fun getEmail(@RequestBody email : String) : ResponseEntity<String>{
-
-        mailService.sendOTP()
-
-    }
-
-
     @PostMapping("/newuser")
     fun storeNewUser(@RequestBody user: User): ResponseEntity<String> {
 
-        mailService.sendOTP(user.firstName, user.lastName, user.email, Constants.OTP_VALIDATION_SUBJECT)
+        val otp = generateOTP()
 
-        dslContext
-            .insertInto(USER)
-            .set(USER.FIRSTNAME, user.firstName)
-            .set(USER.LASTNAME, user.lastName)
-            .set(USER.AGE, user.age)
-            .set(USER.PHONE, user.phone)
-            .set(USER.EMAIL, user.email)
-            .set(USER.PASSWORD, user.password)
-            .execute()
+        otpStorage[user.email] = otp
+        userStorage[user.email] = user
+        mailService.sendOTP(user.firstName, user.lastName, user.email, Constants.OTP_VALIDATION_SUBJECT, otp)
 
-        return ResponseEntity.ok("Successfully stored")
+        return ResponseEntity.ok("OTP sent to ${user.email}. Please verify it on the next page.")
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException::class)
-    fun handleHttpMessageNotReadable(e: HttpMessageNotReadableException): ResponseEntity<String> {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body("Request body is not readable: ${e.message}")
+    @PostMapping("/validate-otp")
+    fun validateOtp(@RequestParam otp: Long): ResponseEntity<String> {
+        val email = otpStorage.keys.firstOrNull()
+        val expectedOtp = otpStorage[email]
+
+        return if (expectedOtp != null && expectedOtp == otp) {
+            otpStorage.remove(email)
+
+            val user = userStorage[email]
+            if (user != null) {
+                dslContext
+                    .insertInto(USER)
+                    .set(USER.FIRSTNAME, user.firstName)
+                    .set(USER.LASTNAME, user.lastName)
+                    .set(USER.AGE, user.age)
+                    .set(USER.PHONE, user.phone)
+                    .set(USER.EMAIL, user.email)
+                    .set(USER.PASSWORD, user.password)
+                    .execute()
+                userStorage.remove(email)
+                ResponseEntity.ok("Email successfully validated! User details stored in the database.")
+            } else {
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve user data.")
+            }
+        } else {
+            ResponseEntity.status(401).body("Invalid OTP. Please try again.")
+        }
+    }
+
+    private fun generateOTP(): Long {
+        return Random.nextLong(10000L, 100000L)
     }
 }

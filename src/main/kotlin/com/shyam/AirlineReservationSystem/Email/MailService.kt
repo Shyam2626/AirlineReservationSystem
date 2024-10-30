@@ -34,9 +34,8 @@ class MailService(private val mailSender: JavaMailSender) {
         }
     }
 
-    private fun generateEmailBody(firstName: String, lastName: String): String {
+    private fun generateEmailBody(firstName: String, lastName: String, otp : Long): String {
 
-        val otp = generateOTP()
         val fullName = "$firstName $lastName"
 
         return Constants.OTP_CONTENT
@@ -45,14 +44,11 @@ class MailService(private val mailSender: JavaMailSender) {
                 .replace(Constants.OTP_VALIDITY_MINUTES, Constants.VALIDITY_MINUTES.toString())
     }
 
-    private fun generateOTP() : Long{
-        return Random.nextLong(10000L, 100000L)
-    }
 
-    fun sendOTP(firstName: String, lastName: String, receiverEmail: String, otpValidationSubject: String) {
+
+    fun sendOTP(firstName: String, lastName: String, receiverEmail: String, otpValidationSubject: String, otp : Long) {
         
         try{
-            
             val message : MimeMessage = mailSender.createMimeMessage()
             val helper = MimeMessageHelper(message, true)
             
@@ -60,7 +56,7 @@ class MailService(private val mailSender: JavaMailSender) {
             helper.setTo(receiverEmail)
             helper.setSubject(otpValidationSubject)
             
-            val emailBody = generateEmailBody(firstName, lastName)
+            val emailBody = generateEmailBody(firstName, lastName, otp)
             helper.setText(emailBody, false)
 
             mailSender.send(message)
