@@ -1,11 +1,16 @@
 package com.shyam.AirlineReservationSystem.dto
 
-@En
 data class User(
+    val userid : Int?,
     val firstName : String,
     val lastName : String,
     val age : Int,
-    val phone : Long,
+    val phone : String,
     val email : String,
     val password : String
+)
+
+data class LoginDetails(
+    val email : String,
+    val password: String
 )

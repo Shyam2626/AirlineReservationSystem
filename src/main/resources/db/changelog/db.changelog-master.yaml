@@ -1,21 +1,37 @@
 databaseChangeLog:
   - changeSet:
-      id: login-table-created
+      id: user-table-created
       author: shyam k
       changes:
         - createTable:
-            tableName: login
+            tableName: User
             columns:
               - column:
-                  name: id
+                  name: userId
                   type: INT
                   autoIncrement: true
                   constraints:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: username
+                  name: firstName
                   type: varchar(255)
+              - column:
+                  name: lastName
+                  type: varchar(255)
+              - column:
+                  name: age
+                  type: INT
+              - column:
+                  name: phone
+                  type: varchar(12)
+              - column:
+                  name: email
+                  type: varchar(50)
               - column:
                   name: password
                   type: varchar(255)
+
+
+
+
