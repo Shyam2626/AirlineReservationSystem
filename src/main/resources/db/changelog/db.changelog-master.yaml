@@ -32,6 +32,58 @@ databaseChangeLog:
                   name: password
                   type: varchar(255)
 
+  - changeSet:
+      id: password-encryption-table-created
+      author: shyam k
+      changes:
+        - createTable:
+            tableName: PasswordManagement
+            columns:
+              - column:
+                  name: id
+                  type: INT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: userid
+                  type: INT
+              - column:
+                  name: secretkey
+                  type: varchar(255)
+              - column:
+                  name: encryptedpassword
+                  type: varchar(255)
+
+  - changeSet:
+      id: encryptedpassword-deleted-in-PasswordManagement
+      author: shyam k
+      changes:
+        - dropColumn:
+            tableName: PasswordManagement
+            columnName: encryptedpassword
+
+  - changeSet:
+      id: password-security-added
+      author : shyam k
+      changes:
+        - addColumn:
+            tableName: PasswordManagement
+            columns:
+              - column:
+                  name: salt
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: iv
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+
+
 
 
 

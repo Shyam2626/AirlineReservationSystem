@@ -6,6 +6,7 @@ package org.jooq.generated.tables.references
 
 import org.jooq.generated.tables.Databasechangelog
 import org.jooq.generated.tables.Databasechangeloglock
+import org.jooq.generated.tables.Passwordmanagement
 import org.jooq.generated.tables.User
 
 
@@ -19,6 +20,11 @@ val DATABASECHANGELOG: Databasechangelog = Databasechangelog.DATABASECHANGELOG
  * The table <code>AirlineReservationSystem.DATABASECHANGELOGLOCK</code>.
  */
 val DATABASECHANGELOGLOCK: Databasechangeloglock = Databasechangeloglock.DATABASECHANGELOGLOCK
+
+/**
+ * The table <code>AirlineReservationSystem.PasswordManagement</code>.
+ */
+val PASSWORDMANAGEMENT: Passwordmanagement = Passwordmanagement.PASSWORDMANAGEMENT
 
 /**
  * The table <code>AirlineReservationSystem.User</code>.

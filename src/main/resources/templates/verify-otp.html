@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Verify OTP</title>
+</head>
+<body>
+<h1>Verify OTP</h1>
+<form th:action="@{/airline/verify-otp}" method="post">
+    <label>Enter OTP:</label>
+    <input type="text" name="otp" required />
+    <input type="text" name="email" th:value="${email}" />
+    <button type="submit">Verify</button>
+</form>
+
+<!-- Optional: Display an error message if OTP is invalid -->
+<div th:if="${param.error}" style="color:red;">
+    Invalid OTP. Please try again.
+</div>
+</body>
+</html>

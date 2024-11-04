@@ -9,6 +9,11 @@ object Constants{
     const val OTP_VALIDITY_MINUTES = "{validityMinutes}"
     const val VALIDITY_MINUTES = 2
 
+    const val GCM_IV_LENGTH = 12
+    const val ENCRYPTION_KEY_SIZE = 256
+    const val GCM_TAG_LENGTH = 128
+    const val SALT_LENGTH = 16
+
     const val OTP_CONTENT = """
         Dear {userName},
         

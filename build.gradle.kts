@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.builtins.StandardNames.FqNames.target
-
 plugins {
 	kotlin("jvm") version "1.9.25"
 	kotlin("plugin.spring") version "1.9.25"
@@ -67,7 +65,7 @@ jooq {
 					password = "root"
 				}
 				generator.apply {
-					name = "org.jooq.codegen.KotlinGenerator"  // Use KotlinGenerator for Kotlin classes
+					name = "org.jooq.codegen.KotlinGenerator"
 					database.apply {
 						name = "org.jooq.meta.mysql.MySQLDatabase"
 						inputSchema = "AirlineReservationSystem"
@@ -89,3 +87,4 @@ jooq {
 		}
 	}
 }
+

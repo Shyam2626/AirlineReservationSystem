@@ -46,7 +46,7 @@ class MailService(private val mailSender: JavaMailSender) {
 
 
 
-    fun sendOTP(firstName: String, lastName: String, receiverEmail: String, otpValidationSubject: String, otp : Long) {
+    fun sendOTP(firstName: String, lastName: String, receiverEmail: String, otp : Long) {
         
         try{
             val message : MimeMessage = mailSender.createMimeMessage()
@@ -54,7 +54,7 @@ class MailService(private val mailSender: JavaMailSender) {
             
             helper.setFrom(Constants.SENDER_EMAIL)
             helper.setTo(receiverEmail)
-            helper.setSubject(otpValidationSubject)
+            helper.setSubject(Constants.OTP_VALIDATION_SUBJECT)
             
             val emailBody = generateEmailBody(firstName, lastName, otp)
             helper.setText(emailBody, false)
