@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +34,7 @@
         nav {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: space-evenly;
             background-color: var(--secondary-color);
             padding: 1rem 2rem;
             box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
@@ -59,7 +59,7 @@
         }
 
         .logo-container p {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: var(--primary-color);
             font-weight: 500;
             font-family: "Rubik Wet Paint";
@@ -169,10 +169,11 @@
     </script>
 </head>
 <body>
+    <!--NAV BAR STYLINGS-->
     <nav>
         <!-- Logo Section -->
         <div class="logo-container">
-            <img src="assets/logo.png" alt="TrustWings Logo">
+            <img src="../assets/logo.png" alt="TrustWings Logo">
             <p>TrustWings</p>
         </div>
 
@@ -182,9 +183,6 @@
         <!-- Navbar Links -->
         <ul class="nav-links">
             <li>Book</li>
-            <li>Manage</li>
-            <li>Experience</li>
-            <li>Destinations</li>
             <li>Help</li>
             <li>TrustWings Club</li>
         </ul>

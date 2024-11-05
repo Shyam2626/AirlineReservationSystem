@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Flight Booking</title>
+    <!-- Google Fonts and Boxicons for styling -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css">
+    
+    <style>
+        /* Root color variables */
+        :root {
+            --primary-color: #333;
+            --secondary-color: #ffffff;
+            --accent-color: #FFD93B;
+            --link-color: #555;
+            --primary-font-color: #6DAFDF;
+        }
+
+        /* Reset styles */
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Navbar Styling */
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--secondary-color);
+            padding: 1rem 2rem;
+            box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 0;
+            width: 100%;
+        }
+
+        /* Logo Section */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-container img {
+            height: 40px;
+            width: auto;
+            transition: transform 0.6s ease;
+        }
+
+        .logo-container p {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        /* Navbar Links */
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links li {
+            font-size: 1rem;
+            color: var(--link-color);
+            cursor: pointer;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 2rem;
+            width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            border: solid var(--link-color) 1px;
+        }
+
+        /* Form Content */
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        label {
+            font-size: 14px;
+            color: var(--primary-color);
+        }
+
+        .input-field {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .search-button {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .search-button:hover {
+            background-color: #001d3d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="Logo">
+                <p>TrustWings</p>
+            </div>
+            <ul class="nav-links">
+                <li>Book</li>
+                <li>Manage</li>
+                <li>Help</li>
+                <li>Club</li>
+            </ul>
+        </nav>
+        
+        <div class="main-container">
+            <div class="form-row">
+                <label for="guests">Guests</label>
+                <select id="guests" class="input-field">
+                    <option value="1">1 Guest</option>
+                    <option value="2">2 Guests</option>
+                    <option value="3">3 Guests</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="class">Class</label>
+                <select id="class" class="input-field">
+                    <option value="economy">Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First Class</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="from">Flying from</label>
+                <input type="text" id="from" placeholder="Kolkata, CCU" class="input-field">
+            </div>
+            <div class="form-row">
+                <label for="to">Flying to</label>
+                <input type="text" id="to" placeholder="Melbourne, MEL" class="input-field">
+            </div>
+            <div class="form-row">
+                <label for="outbound">Outbound</label>
+                <input type="date" id="outbound" class="input-field">
+            </div>
+            <div class="form-row">
+                <label for="return">Return</label>
+                <input type="date" id="return" class="input-field">
+            </div>
+            <button class="search-button" onclick="submitForm()">Search flights</button>
+        </div>
+    </div>
+    
+    <script>
+        function submitForm() {
+            const formData = {
+                guests: document.getElementById('guests').value,
+                class: document.getElementById('class').value,
+                from: document.getElementById('from').value,
+                to: document.getElementById('to').value,
+                outbound: document.getElementById('outbound').value,
+                return: document.getElementById('return').value
+            };
+
+            fetch('', { //add end point 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Flight search submitted successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was an error submitting the form.');
+            });
+        }
+    </script>
+</body>  
+</html>
