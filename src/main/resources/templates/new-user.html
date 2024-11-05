@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>Create New User</h1>
-<form th:action="@{/airline/new-user}" th:object="${newUser}" method="post">
+<form th:action="@{/airline/new-user}" th:object="${newUser}" method="post" >
     <label>First Name:</label>
     <input type="text" th:field="*{firstName}" /><br>
     <label>Last Name:</label>
