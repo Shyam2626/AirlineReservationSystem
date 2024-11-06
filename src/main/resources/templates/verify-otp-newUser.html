@@ -352,7 +352,7 @@
         </nav>
         <div class="main-container">
             <h2>Verify OTP</h2>
-            <form th:action="@{/airline/verify-otp}" method="post">
+            <form th:action="@{/airline/verify-otp-newUser}" method="post">
                 <div class="input-group">
                     <i class="material-symbols-outlined">alternate_email</i>
                     <input  type="text" name="email" th:value="${email}">

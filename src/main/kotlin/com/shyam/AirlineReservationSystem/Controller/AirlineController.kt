@@ -7,11 +7,16 @@ import com.shyam.AirlineReservationSystem.EncryptionAndDecryption.PasswordSecuri
 import org.jooq.DSLContext
 import org.jooq.generated.tables.references.PASSWORDMANAGEMENT
 import org.jooq.generated.tables.references.USER
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 @Controller
@@ -19,11 +24,12 @@ import kotlin.random.Random
 class AirlineController(
     @Autowired private val dslContext: DSLContext,
     @Autowired private val mailService: MailService,
-    @Autowired private val passwordCoder: PasswordCoder,
-    @Autowired private val passwordSecurityService: PasswordSecurityService
+    @Autowired private val passwordSecurityService: PasswordSecurityService,
+    @Autowired private val scheduledExecutorService: ScheduledExecutorService
 ) {
     private val userStorage = mutableMapOf<String, User>()
     private val otpStorage = mutableMapOf<String, Long>()
+    private val logger = LoggerFactory.getLogger(AirlineController::class.java)
 
     @GetMapping
     fun showLogin(model: Model): String {
@@ -35,39 +41,124 @@ class AirlineController(
     fun processLogin(@ModelAttribute("loginDetails") loginDetails: LoginDetails, redirectAttributes: RedirectAttributes): String {
         val user = dslContext.selectFrom(USER)
             .where(USER.EMAIL.eq(loginDetails.email))
-            .fetchOne() ?: run {
-            redirectAttributes.addFlashAttribute("error", "User not found.")
-            return "redirect:/airline"
-        }
+            .fetchOne() ?: return redirectWithError(redirectAttributes, "User not found.")
 
         val passwordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT)
             .where(PASSWORDMANAGEMENT.USERID.eq(user.userid))
-            .fetchOne() ?: run {
-            redirectAttributes.addFlashAttribute("error", "Invalid credentials.")
-            return "redirect:/airline"
-        }
+            .fetchOne() ?: return redirectWithError(redirectAttributes, "Invalid credentials.")
 
         val isValid = user.password?.let {
-            passwordDetails.secretkey?.let { it1 ->
-                passwordDetails.salt?.let { it2 ->
-                    passwordDetails.iv?.let { it3 ->
-                        passwordSecurityService.verifyPassword(
-                            loginDetails.password,
-                            it,
-                            it2,
-                            it3,
-                            it1
-                        )
-                    }
-                }
-            }
+            passwordSecurityService.verifyPassword(
+                loginDetails.password,
+                it,
+                passwordDetails.salt!!,
+                passwordDetails.iv!!,
+                passwordDetails.secretkey!!
+            )
+        } ?: false
+
+        return if (isValid) "redirect:/airline/home" else redirectWithError(redirectAttributes, "Invalid credentials.")
+    }
+
+    @GetMapping("/forgot-password")
+    fun forgotPassword(model: Model): String = "forgot-password"
+
+    @PostMapping("/forgot-password")
+    fun forgotPasswordSendEmail(@ModelAttribute("forgotPasswordEmail") email: String, redirectAttributes: RedirectAttributes): String {
+        val user = dslContext.selectFrom(USER).where(USER.EMAIL.eq(email)).fetchOne()
+
+        if (user == null) {
+            redirectAttributes.addFlashAttribute("error", "If an account exists with this email, you will receive an OTP")
+            return "redirect:/airline/forgot-password"
         }
 
-        return if (isValid == true) {
-            "redirect:/airline/home"
-        } else {
-            redirectAttributes.addFlashAttribute("error", "Invalid credentials.")
-            "redirect:/airline"
+        val otp = generateOTP()
+        otpStorage[email] = otp
+        scheduledExecutorService.schedule({ otpStorage.remove(email) }, 5, TimeUnit.MINUTES)
+
+        user.firstname?.let { user.lastname?.let { it1 -> mailService.sendOtpForForgotPassword(it, it1, email, otp) } }
+
+        return "redirect:/airline/verify-otp-forgotPassword?email=${urlEncode(email)}"
+    }
+
+    @GetMapping("/verify-otp-forgotPassword")
+    fun verifyOtpForm(@RequestParam("email") email: String, model: Model): String {
+        model.addAttribute("email", email)
+        return "verify-otp-forgotPassword"
+    }
+
+    @PostMapping("/verify-otp-forgotPassword")
+    fun verifyOtp(
+        @RequestParam("email") email: String,
+        @RequestParam("otp") otp: String,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        val storedOtp = otpStorage[email]
+        if (storedOtp == otp.toLongOrNull()) {
+            otpStorage.remove(email)  // Remove used OTP
+            return "redirect:/airline/change-password?email=${urlEncode(email)}"
+        }
+
+        return redirectWithError(redirectAttributes, "Invalid OTP", "/airline/verify-otp-forgotPassword?email=${urlEncode(email)}")
+    }
+
+    @GetMapping("/change-password")
+    fun changePasswordForm(@RequestParam("email") email: String, model: Model): String {
+        model.addAttribute("email", email)
+        return "change-password"
+    }
+
+    @PostMapping("/change-password")
+    fun changePassword(
+        @RequestParam("email") email: String,
+        @RequestParam("newPassword") newPassword: String,
+        @RequestParam("confirmPassword") confirmPassword: String,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        if (!isPasswordValid(newPassword)) {
+            return redirectWithError(
+                redirectAttributes,
+                "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+                "/airline/change-password?email=${urlEncode(email)}"
+            )
+        }
+
+        if (newPassword != confirmPassword) {
+            return redirectWithError(redirectAttributes, "Passwords do not match", "/airline/change-password?email=${urlEncode(email)}")
+        }
+
+        return try {
+            val user = dslContext.selectFrom(USER).where(USER.EMAIL.eq(email)).fetchOne()
+            val userPasswordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT).where(PASSWORDMANAGEMENT.USERID.eq(user?.userid)).fetchOne()
+
+            val encryptedPassword = passwordSecurityService.encryptPassword(newPassword)
+
+            val updatedRows = dslContext
+                            .update(USER)
+                            .set(USER.PASSWORD, encryptedPassword.encryptedPassword)
+                            .where(USER.EMAIL.eq(email))
+                            .execute()
+
+            dslContext.delete(PASSWORDMANAGEMENT)
+                .where(PASSWORDMANAGEMENT.USERID.eq(user?.userid))
+                .execute()
+
+            dslContext.insertInto(PASSWORDMANAGEMENT)
+                .set(PASSWORDMANAGEMENT.USERID, user?.userid)
+                .set(PASSWORDMANAGEMENT.IV, encryptedPassword.iv)
+                .set(PASSWORDMANAGEMENT.SALT, encryptedPassword.salt)
+                .set(PASSWORDMANAGEMENT.SECRETKEY, encryptedPassword.secretKey)
+                .execute()
+
+            if (updatedRows > 0) {
+                redirectAttributes.addFlashAttribute("success", "Password changed successfully!")
+                "home"
+            } else {
+                redirectWithError(redirectAttributes, "Failed to change password. Please try again.", "/airline/change-password?email=${urlEncode(email)}")
+            }
+        } catch (e: Exception) {
+            logger.error("Error changing password", e)
+            redirectWithError(redirectAttributes, "An error occurred. Please try again.", "/airline/change-password?email=${urlEncode(email)}")
         }
     }
 
@@ -78,33 +169,32 @@ class AirlineController(
     }
 
     @PostMapping("/new-user")
-    fun saveNewUser(@ModelAttribute("newUser") user: User): String {
+    fun saveNewUser(@ModelAttribute("newUser") user: User, redirectAttributes: RedirectAttributes): String {
         val otp = generateOTP()
         userStorage[user.email] = user
         otpStorage[user.email] = otp
 
-        mailService.sendOTP(user.firstName, user.lastName, user.email, otp)
-
-        return "redirect:/airline/verify-otp?email=${user.email}"
+        mailService.sendOtpForNewUser(user.firstName, user.lastName, user.email, otp)
+        return "redirect:/airline/verify-otp-newUser?email=${urlEncode(user.email)}"
     }
 
-    @GetMapping("/verify-otp")
+    @GetMapping("/verify-otp-newUser")
     fun showOtpVerificationForm(@RequestParam("email") email: String, model: Model): String {
         model.addAttribute("email", email)
-        return "verify-otp"
+        return "verify-otp-newUser"
     }
 
-    @PostMapping("/verify-otp")
-    fun verifyOtp(@RequestParam("email") email: String, @RequestParam("otp") otp: String): String {
+    @PostMapping("/verify-otp-newUser")
+    fun verifyOtpForNewUser(@RequestParam("email") email: String, @RequestParam("otp") otp: String): String {
         val storedOtp = otpStorage[email]
         val inputOtp = otp.toLongOrNull()
 
-        return if (storedOtp != null && storedOtp == inputOtp) {
-            val user = userStorage[email] ?: return "redirect:/airline/verify-otp?email=$email&error=User not found"
+        return if (storedOtp == inputOtp) {
+            val user = userStorage[email] ?: return "redirect:/airline/verify-otp-newUser?email=$email&error=User not found"
 
-            val encryptionResult = passwordSecurityService.encryptPassword(user.password ?: return "redirect:/airline/verify-otp?email=$email&error=Password is null")
+            val encryptionResult = passwordSecurityService.encryptPassword(user.password ?: return "redirect:/airline/verify-otp-newUser?email=$email&error=Password is null")
 
-            val userIdRecord = dslContext.insertInto(USER)
+            val userId = dslContext.insertInto(USER)
                 .set(USER.FIRSTNAME, user.firstName)
                 .set(USER.LASTNAME, user.lastName)
                 .set(USER.AGE, user.age)
@@ -113,8 +203,8 @@ class AirlineController(
                 .set(USER.PASSWORD, encryptionResult.encryptedPassword)
                 .returning(USER.USERID)
                 .fetchOne()
+                ?.getValue(USER.USERID)
 
-            val userId = userIdRecord?.getValue(USER.USERID)
             dslContext.insertInto(PASSWORDMANAGEMENT)
                 .set(PASSWORDMANAGEMENT.USERID, userId)
                 .set(PASSWORDMANAGEMENT.SECRETKEY, encryptionResult.secretKey)
@@ -124,16 +214,24 @@ class AirlineController(
 
             "redirect:/airline/home"
         } else {
-            "redirect:/airline/verify-otp?email=$email&error=Invalid OTP"
+            "redirect:/airline/verify-otp-newUser?email=$email&error=Invalid OTP"
         }
     }
 
     @GetMapping("/home")
-    fun home(): String {
-        return "home"
+    fun home(): String = "home"
+
+    private fun generateOTP(): Long = Random.nextLong(100000, 1000000)
+
+    private fun isPasswordValid(password: String): Boolean {
+        val passwordPattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$"
+        return password.matches(passwordPattern.toRegex())
     }
 
-    private fun generateOTP(): Long {
-        return Random.nextLong(100000, 1000000)
+    private fun redirectWithError(redirectAttributes: RedirectAttributes, message: String, url: String = "/airline"): String {
+        redirectAttributes.addFlashAttribute("error", message)
+        return "redirect:$url"
     }
+
+    private fun urlEncode(value: String): String = URLEncoder.encode(value, StandardCharsets.UTF_8.toString())
 }

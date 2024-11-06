@@ -173,8 +173,9 @@
     <nav>
         <!-- Logo Section -->
         <div class="logo-container">
-            <img src="../assets/logo.png" alt="TrustWings Logo">
-            <p>TrustWings</p>
+            <img th:src="@{../assets/logo.png}" alt="Sample Image">
+<!--            <img src="../assets/logo.png" alt="TrustWings Logo">-->
+            <p>TrustyWings</p>
         </div>
 
         <!-- Hamburger Icon for Mobile -->
@@ -190,7 +191,7 @@
         <!-- Right-Side Icons -->
         <div class="nav-icons">
             <!-- Profile Icon -->
-            <a href="assets/logo.png"><span class="icon">&#128100;</span></a> <!-- Unicode for user profile icon -->
+            <a href=@{../assets/logo.png}><span class="icon">&#128100;</span></a> <!-- Unicode for user profile icon -->
         </div>
     </nav>
 </body>

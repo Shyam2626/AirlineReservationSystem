@@ -23,3 +23,4 @@ import org.jooq.impl.Internal
 val KEY_DATABASECHANGELOGLOCK_PRIMARY: UniqueKey<DatabasechangeloglockRecord> = Internal.createUniqueKey(Databasechangeloglock.DATABASECHANGELOGLOCK, DSL.name("KEY_DATABASECHANGELOGLOCK_PRIMARY"), arrayOf(Databasechangeloglock.DATABASECHANGELOGLOCK.ID), true)
 val KEY_PASSWORDMANAGEMENT_PRIMARY: UniqueKey<PasswordmanagementRecord> = Internal.createUniqueKey(Passwordmanagement.PASSWORDMANAGEMENT, DSL.name("KEY_PasswordManagement_PRIMARY"), arrayOf(Passwordmanagement.PASSWORDMANAGEMENT.ID), true)
 val KEY_USER_PRIMARY: UniqueKey<UserRecord> = Internal.createUniqueKey(User.USER, DSL.name("KEY_User_PRIMARY"), arrayOf(User.USER.USERID), true)
+val KEY_USER_UNIQUE_EMAIL_CONSTRAINT: UniqueKey<UserRecord> = Internal.createUniqueKey(User.USER, DSL.name("KEY_User_unique_email_constraint"), arrayOf(User.USER.EMAIL), true)

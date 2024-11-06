@@ -15,7 +15,7 @@ data class User(
     var userid: Int? = null,
     var firstname: String? = null,
     var lastname: String? = null,
-    var age: Int? = null,
+    var age: String? = null,
     var phone: String? = null,
     var email: String? = null,
     var password: String? = null

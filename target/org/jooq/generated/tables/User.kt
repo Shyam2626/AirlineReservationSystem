@@ -6,6 +6,8 @@ package org.jooq.generated.tables
 
 import java.util.function.Function
 
+import kotlin.collections.List
+
 import org.jooq.Field
 import org.jooq.ForeignKey
 import org.jooq.Identity
@@ -21,6 +23,7 @@ import org.jooq.TableOptions
 import org.jooq.UniqueKey
 import org.jooq.generated.Airlinereservationsystem
 import org.jooq.generated.keys.KEY_USER_PRIMARY
+import org.jooq.generated.keys.KEY_USER_UNIQUE_EMAIL_CONSTRAINT
 import org.jooq.generated.tables.records.UserRecord
 import org.jooq.impl.DSL
 import org.jooq.impl.Internal
@@ -79,7 +82,7 @@ open class User(
     /**
      * The column <code>AirlineReservationSystem.User.age</code>.
      */
-    val AGE: TableField<UserRecord, Int?> = createField(DSL.name("age"), SQLDataType.INTEGER, this, "")
+    val AGE: TableField<UserRecord, String?> = createField(DSL.name("age"), SQLDataType.VARCHAR(255), this, "")
 
     /**
      * The column <code>AirlineReservationSystem.User.phone</code>.
@@ -120,6 +123,7 @@ open class User(
     override fun getSchema(): Schema? = if (aliased()) null else Airlinereservationsystem.AIRLINERESERVATIONSYSTEM
     override fun getIdentity(): Identity<UserRecord, Int?> = super.getIdentity() as Identity<UserRecord, Int?>
     override fun getPrimaryKey(): UniqueKey<UserRecord> = KEY_USER_PRIMARY
+    override fun getUniqueKeys(): List<UniqueKey<UserRecord>> = listOf(KEY_USER_UNIQUE_EMAIL_CONSTRAINT)
     override fun `as`(alias: String): User = User(DSL.name(alias), this)
     override fun `as`(alias: Name): User = User(alias, this)
     override fun `as`(alias: Table<*>): User = User(alias.getQualifiedName(), this)
@@ -142,16 +146,16 @@ open class User(
     // -------------------------------------------------------------------------
     // Row7 type methods
     // -------------------------------------------------------------------------
-    override fun fieldsRow(): Row7<Int?, String?, String?, Int?, String?, String?, String?> = super.fieldsRow() as Row7<Int?, String?, String?, Int?, String?, String?, String?>
+    override fun fieldsRow(): Row7<Int?, String?, String?, String?, String?, String?, String?> = super.fieldsRow() as Row7<Int?, String?, String?, String?, String?, String?, String?>
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Function)}.
      */
-    fun <U> mapping(from: (Int?, String?, String?, Int?, String?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
+    fun <U> mapping(from: (Int?, String?, String?, String?, String?, String?, String?) -> U): SelectField<U> = convertFrom(Records.mapping(from))
 
     /**
      * Convenience mapping calling {@link SelectField#convertFrom(Class,
      * Function)}.
      */
-    fun <U> mapping(toType: Class<U>, from: (Int?, String?, String?, Int?, String?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
+    fun <U> mapping(toType: Class<U>, from: (Int?, String?, String?, String?, String?, String?, String?) -> U): SelectField<U> = convertFrom(toType, Records.mapping(from))
 }

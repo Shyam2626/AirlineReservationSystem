@@ -81,6 +81,24 @@ databaseChangeLog:
                   type: varchar(255)
                   constraints:
                     nullable: false
+  - changeSet:
+      id: age-datatype-modified
+      author: shyam k
+      changes:
+        - modifyDataType:
+            columnName: age
+            newDataType: VARCHAR(255)
+            tableName: User
+
+  - changeSet:
+      id: email-column-made-unique
+      author: shyam k
+      changes:
+        - addUniqueConstraint:
+            columnNames: email
+            constraintName: unique_email_constraint
+            tableName: User
+
 
 
 

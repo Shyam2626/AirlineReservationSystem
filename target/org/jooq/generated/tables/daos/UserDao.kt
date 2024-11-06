@@ -67,12 +67,12 @@ open class UserDao(configuration: Configuration?) : DAOImpl<UserRecord, org.jooq
      * Fetch records that have <code>age BETWEEN lowerInclusive AND
      * upperInclusive</code>
      */
-    fun fetchRangeOfAge(lowerInclusive: Int?, upperInclusive: Int?): List<org.jooq.generated.tables.pojos.User> = fetchRange(User.USER.AGE, lowerInclusive, upperInclusive)
+    fun fetchRangeOfAge(lowerInclusive: String?, upperInclusive: String?): List<org.jooq.generated.tables.pojos.User> = fetchRange(User.USER.AGE, lowerInclusive, upperInclusive)
 
     /**
      * Fetch records that have <code>age IN (values)</code>
      */
-    fun fetchByAge(vararg values: Int): List<org.jooq.generated.tables.pojos.User> = fetch(User.USER.AGE, *values.toTypedArray())
+    fun fetchByAge(vararg values: String): List<org.jooq.generated.tables.pojos.User> = fetch(User.USER.AGE, *values)
 
     /**
      * Fetch records that have <code>phone BETWEEN lowerInclusive AND
@@ -95,6 +95,11 @@ open class UserDao(configuration: Configuration?) : DAOImpl<UserRecord, org.jooq
      * Fetch records that have <code>email IN (values)</code>
      */
     fun fetchByEmail(vararg values: String): List<org.jooq.generated.tables.pojos.User> = fetch(User.USER.EMAIL, *values)
+
+    /**
+     * Fetch a unique record that has <code>email = value</code>
+     */
+    fun fetchOneByEmail(value: String): org.jooq.generated.tables.pojos.User? = fetchOne(User.USER.EMAIL, value)
 
     /**
      * Fetch records that have <code>password BETWEEN lowerInclusive AND

@@ -2,6 +2,7 @@ package com.shyam.AirlineReservationSystem.EncryptionAndDecryption
 
 import com.shyam.AirlineReservationSystem.Constants
 import com.shyam.AirlineReservationSystem.DTO.EncryptionResult
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.security.SecureRandom
 import java.util.Base64
@@ -88,5 +89,38 @@ class PasswordSecurityService {
         val gcmSpec = GCMParameterSpec(Constants.GCM_TAG_LENGTH, iv)
         cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec)
         return cipher.doFinal(encryptedData)
+    }
+
+    fun encodePassword(newPassword: String, salt: String?, iv: String?, secretkey: String?): String {
+        // Validate inputs first
+        if (salt.isNullOrBlank() || iv.isNullOrBlank() || secretkey.isNullOrBlank()) {
+            throw IllegalArgumentException("Salt, IV, and secret key are required")
+        }
+
+        try {
+            val saltBytes = Base64.getDecoder().decode(salt)
+            val ivBytes = Base64.getDecoder().decode(iv)
+            val keyBytes = Base64.getDecoder().decode(secretkey)
+
+            // Validate decoded lengths
+            if (saltBytes.size != Constants.SALT_LENGTH || ivBytes.size != Constants.GCM_IV_LENGTH || keyBytes.size != Constants.ENCRYPTION_KEY_SIZE) {
+                throw IllegalArgumentException("Invalid length for salt, IV, or secret key")
+            }
+
+            val aesKey = SecretKeySpec(keyBytes, 0, keyBytes.size, "AES")
+            val hashedPassword = hashPassword(newPassword, saltBytes)
+            val encryptedPassword = aesEncrypt(hashedPassword, aesKey, ivBytes)
+
+            return Base64.getEncoder().encodeToString(encryptedPassword)
+        } catch (e: IllegalArgumentException) {
+            throw e
+        } catch (e: Exception) {
+            logger.error("Error encrypting password", e)
+            throw RuntimeException("Error encrypting password", e)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PasswordSecurityService::class.java)
     }
 }

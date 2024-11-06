@@ -324,8 +324,10 @@
 </head>
 <body>
     <div class="container">
-        <img src="assets/airplane-1.png" alt="Plane 1" class="plane-1">
-        <img src="assets/airplane-2.png" alt="Plane 2" class="plane-2">
+        <img th:src="@{/assets/airplane-1.png}" alt="airplane 1">
+        <img th:src="@{/assets/airplane-2.png}" alt="airplane 2">
+<!--        <img src="assets/airplane-1.png" alt="Plane 1" class="plane-1">-->
+<!--        <img src="assets/airplane-2.png" alt="Plane 2" class="plane-2">-->
         <nav>
             <!-- Logo Section -->
             <div class="logo-container">
@@ -363,7 +365,7 @@
             </div>
             <div th:if="${error}" th:text="${error}" class="wrong-password-text"></div>
             <div class="options">
-                <a href="#" >Forgot password?</a> <!--remove if no needed-->
+                <a href="/airline/forgot-password" >Forgot password?</a> <!--remove if no needed-->
             </div>
             <button type="submit">Login</button>
             <p>Don’t have an account? <a th:href="@{/airline/new-user}">Register</a></p>

@@ -4,13 +4,11 @@ data class User(
     var userid: Int? = null,
     var firstName: String = "",
     var lastName: String = "",
-    var age: Int = 0,
+    var age: String = "",
     var phone: String = "",
     var email: String = "",
     var password: String = ""
 )
-
-
 
 data class LoginDetails(
     var email: String = "",
