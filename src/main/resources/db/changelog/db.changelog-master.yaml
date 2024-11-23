@@ -99,9 +99,10 @@ databaseChangeLog:
             constraintName: unique_email_constraint
             tableName: User
 
-
-
-
-
-
+  - changeSet:
+      id: encryption-logic-deleted
+      author: shyam_k
+      changes:
+        - dropTable:
+            tableName: PasswordManagement
 

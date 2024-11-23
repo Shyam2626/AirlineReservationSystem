@@ -10,7 +10,6 @@ import org.jooq.Catalog
 import org.jooq.Table
 import org.jooq.generated.tables.Databasechangelog
 import org.jooq.generated.tables.Databasechangeloglock
-import org.jooq.generated.tables.Passwordmanagement
 import org.jooq.generated.tables.User
 import org.jooq.impl.SchemaImpl
 
@@ -39,11 +38,6 @@ open class Airlinereservationsystem : SchemaImpl("AirlineReservationSystem", Def
     val DATABASECHANGELOGLOCK: Databasechangeloglock get() = Databasechangeloglock.DATABASECHANGELOGLOCK
 
     /**
-     * The table <code>AirlineReservationSystem.PasswordManagement</code>.
-     */
-    val PASSWORDMANAGEMENT: Passwordmanagement get() = Passwordmanagement.PASSWORDMANAGEMENT
-
-    /**
      * The table <code>AirlineReservationSystem.User</code>.
      */
     val USER: User get() = User.USER
@@ -53,7 +47,6 @@ open class Airlinereservationsystem : SchemaImpl("AirlineReservationSystem", Def
     override fun getTables(): List<Table<*>> = listOf(
         Databasechangelog.DATABASECHANGELOG,
         Databasechangeloglock.DATABASECHANGELOGLOCK,
-        Passwordmanagement.PASSWORDMANAGEMENT,
         User.USER
     )
 }
