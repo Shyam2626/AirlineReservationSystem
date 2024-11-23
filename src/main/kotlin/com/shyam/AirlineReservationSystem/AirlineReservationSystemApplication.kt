@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService
 
 @SpringBootApplication
 class AirlineReservationSystemApplication{
+	
 	@Bean
 	fun scheduledExecutorService(): ScheduledExecutorService = Executors.newScheduledThreadPool(5)
 }
