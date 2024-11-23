@@ -15,6 +15,25 @@ class MailService(private val mailSender: JavaMailSender) {
 
     private val logger = LoggerFactory.getLogger(MailService::class.java)
 
+    fun sendSimpleMessage(to: String, subject: String, text: String) {
+        try {
+            val message: MimeMessage = mailSender.createMimeMessage()
+            val helper = MimeMessageHelper(message, true)
+
+            helper.setFrom(Constants.SENDER_EMAIL)
+            helper.setTo(to)
+            helper.setSubject(subject)
+            helper.setText(text, false)
+
+            mailSender.send(message)
+            logger.info("Email sent successfully to {}", to)
+        } catch (ex: MailException) {
+            logger.error("Failed to send email to {}: {}", to, ex.message)
+        } catch (ex: Exception) {
+            logger.error("Unexpected error occurred while sending email: {}", ex.message)
+        }
+    }
+
     private fun generateEmailBody(firstName: String, lastName: String, otp : Long, emailContent : String): String {
 
         val fullName = "$firstName $lastName"

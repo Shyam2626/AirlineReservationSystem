@@ -1,90 +1,90 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    kotlin("plugin.jpa") version "1.9.25"
-    id("org.springframework.boot") version "3.3.4"
-    id("io.spring.dependency-management") version "1.1.6"
-    id("nu.studer.jooq") version "8.1"
+	kotlin("jvm") version "1.9.25"
+	kotlin("plugin.spring") version "1.9.25"
+	id("org.springframework.boot") version "3.3.4"
+	id("io.spring.dependency-management") version "1.1.6"
+	kotlin("plugin.jpa") version "1.9.25"
+	id("nu.studer.jooq") version "8.1"
 }
 
 group = "com.shyam"
 version = "0.0.1-SNAPSHOT"
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
 }
 
 repositories {
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-jooq")
-    implementation("org.springframework.boot:spring-boot-starter-mail")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.liquibase:liquibase-core")
-    jooqGenerator("mysql:mysql-connector-java:8.0.33")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    runtimeOnly("com.mysql:mysql-connector-j")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("org.springframework.boot:spring-boot-starter-jooq")
+	implementation("org.springframework.boot:spring-boot-starter-mail")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.jetbrains.kotlin:kotlin-reflect")
+	implementation("org.liquibase:liquibase-core")
+	jooqGenerator("mysql:mysql-connector-java:8.0.33")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+	runtimeOnly("com.mysql:mysql-connector-j")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 }
 
 kotlin {
-    jvmToolchain(21) // Sets the Kotlin compiler JVM target to 21
-    compilerOptions {
-        freeCompilerArgs.add("-Xjsr305=strict")
-    }
+	compilerOptions {
+		freeCompilerArgs.addAll("-Xjsr305=strict")
+	}
 }
 
 allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-    annotation("jakarta.persistence.Embeddable")
+	annotation("jakarta.persistence.Entity")
+	annotation("jakarta.persistence.MappedSuperclass")
+	annotation("jakarta.persistence.Embeddable")
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+	useJUnitPlatform()
 }
 
 jooq {
-    version.set("3.18.5")
-    configurations {
-        create("main") {
-            jooqConfiguration.apply {
-                jdbc.apply {
-                    driver = "com.mysql.cj.jdbc.Driver"
-                    url = "jdbc:mysql://localhost:3306/AirlineReservationSystem"
-                    user = "root"
-                    password = "root"
-                }
-                generator.apply {
-                    name = "org.jooq.codegen.KotlinGenerator"
-                    database.apply {
-                        name = "org.jooq.meta.mysql.MySQLDatabase"
-                        inputSchema = "AirlineReservationSystem"
-                        includes = ".*"
-                        excludes = ""
-                    }
-                    generate.apply {
-                        isRecords = true
-                        isDaos = true
-                        isPojos = true
-                        isFluentSetters = true
-                    }
-                    target.apply {
-                        packageName = "" // Recommended: specify a package
-                        directory = "target" // Recommended: put generated files in source
-                    }
-                }
-            }
-        }
-    }
+	version.set("3.18.5")
+	configurations {
+		create("main") {
+			jooqConfiguration.apply {
+				jdbc.apply {
+					driver = "com.mysql.cj.jdbc.Driver"
+					url = "jdbc:mysql://localhost:3306/AirlineReservationSystem"
+					user = "root"
+					password = "root"
+				}
+				generator.apply {
+					name = "org.jooq.codegen.KotlinGenerator"
+					database.apply {
+						name = "org.jooq.meta.mysql.MySQLDatabase"
+						inputSchema = "AirlineReservationSystem"
+						includes = ".*"
+						excludes = ""
+					}
+					generate.apply {
+						isRecords = true
+						isDaos = true
+						isPojos = true
+						isFluentSetters = true
+					}
+					target.apply {
+						packageName = ""
+						directory = "target"
+					}
+				}
+			}
+		}
+	}
 }
+

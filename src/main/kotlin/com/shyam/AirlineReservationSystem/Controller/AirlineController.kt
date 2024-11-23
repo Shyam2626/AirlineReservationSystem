@@ -3,7 +3,9 @@ package com.shyam.AirlineReservationSystem.controller
 import com.shyam.AirlineReservationSystem.DTO.LoginDetails
 import com.shyam.AirlineReservationSystem.DTO.User
 import com.shyam.AirlineReservationSystem.Email.MailService
+import com.shyam.AirlineReservationSystem.EncryptionAndDecryption.PasswordSecurityService
 import org.jooq.DSLContext
+import org.jooq.generated.tables.references.PASSWORDMANAGEMENT
 import org.jooq.generated.tables.references.USER
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +24,7 @@ import kotlin.random.Random
 class AirlineController(
     @Autowired private val dslContext: DSLContext,
     @Autowired private val mailService: MailService,
+    @Autowired private val passwordSecurityService: PasswordSecurityService,
     @Autowired private val scheduledExecutorService: ScheduledExecutorService
 ) {
     private val userStorage = mutableMapOf<String, User>()
@@ -40,11 +43,19 @@ class AirlineController(
             .where(USER.EMAIL.eq(loginDetails.email))
             .fetchOne() ?: return redirectWithError(redirectAttributes, "User not found.")
 
-//        val passwordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT)
-//            .where(PASSWORDMANAGEMENT.USERID.eq(user.userid))
-//            .fetchOne() ?: return redirectWithError(redirectAttributes, "Invalid credentials.")
+        val passwordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT)
+            .where(PASSWORDMANAGEMENT.USERID.eq(user.userid))
+            .fetchOne() ?: return redirectWithError(redirectAttributes, "Invalid credentials.")
 
-        val isValid : Boolean = (loginDetails.password == user.password)
+        val isValid = user.password?.let {
+            passwordSecurityService.verifyPassword(
+                loginDetails.password,
+                it,
+                passwordDetails.salt!!,
+                passwordDetails.iv!!,
+                passwordDetails.secretkey!!
+            )
+        } ?: false
 
         return if (isValid) "redirect:/airline/home" else redirectWithError(redirectAttributes, "Invalid credentials.")
     }
@@ -118,26 +129,26 @@ class AirlineController(
 
         return try {
             val user = dslContext.selectFrom(USER).where(USER.EMAIL.eq(email)).fetchOne()
-//            val userPasswordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT).where(PASSWORDMANAGEMENT.USERID.eq(user?.userid)).fetchOne()
+            val userPasswordDetails = dslContext.selectFrom(PASSWORDMANAGEMENT).where(PASSWORDMANAGEMENT.USERID.eq(user?.userid)).fetchOne()
 
-//            val encryptedPassword = passwordSecurityService.encryptPassword(newPassword)
+            val encryptedPassword = passwordSecurityService.encryptPassword(newPassword)
 
             val updatedRows = dslContext
                             .update(USER)
-                            .set(USER.PASSWORD, newPassword)
+                            .set(USER.PASSWORD, encryptedPassword.encryptedPassword)
                             .where(USER.EMAIL.eq(email))
                             .execute()
 
-//            dslContext.delete(PASSWORDMANAGEMENT)
-//                .where(PASSWORDMANAGEMENT.USERID.eq(user?.userid))
-//                .execute()
+            dslContext.delete(PASSWORDMANAGEMENT)
+                .where(PASSWORDMANAGEMENT.USERID.eq(user?.userid))
+                .execute()
 
-//            dslContext.insertInto(PASSWORDMANAGEMENT)
-//                .set(PASSWORDMANAGEMENT.USERID, user?.userid)
-//                .set(PASSWORDMANAGEMENT.IV, encryptedPassword.iv)
-//                .set(PASSWORDMANAGEMENT.SALT, encryptedPassword.salt)
-//                .set(PASSWORDMANAGEMENT.SECRETKEY, encryptedPassword.secretKey)
-//                .execute()
+            dslContext.insertInto(PASSWORDMANAGEMENT)
+                .set(PASSWORDMANAGEMENT.USERID, user?.userid)
+                .set(PASSWORDMANAGEMENT.IV, encryptedPassword.iv)
+                .set(PASSWORDMANAGEMENT.SALT, encryptedPassword.salt)
+                .set(PASSWORDMANAGEMENT.SECRETKEY, encryptedPassword.secretKey)
+                .execute()
 
             if (updatedRows > 0) {
                 redirectAttributes.addFlashAttribute("success", "Password changed successfully!")
@@ -181,23 +192,25 @@ class AirlineController(
         return if (storedOtp == inputOtp) {
             val user = userStorage[email] ?: return "redirect:/airline/verify-otp-newUser?email=$email&error=User not found"
 
+            val encryptionResult = passwordSecurityService.encryptPassword(user.password ?: return "redirect:/airline/verify-otp-newUser?email=$email&error=Password is null")
+
             val userId = dslContext.insertInto(USER)
                 .set(USER.FIRSTNAME, user.firstName)
                 .set(USER.LASTNAME, user.lastName)
                 .set(USER.AGE, user.age)
                 .set(USER.PHONE, user.phone)
                 .set(USER.EMAIL, user.email)
-                .set(USER.PASSWORD, user.password)
+                .set(USER.PASSWORD, encryptionResult.encryptedPassword)
                 .returning(USER.USERID)
                 .fetchOne()
                 ?.getValue(USER.USERID)
 
-//            dslContext.insertInto(PASSWORDMANAGEMENT)
-//                .set(PASSWORDMANAGEMENT.USERID, userId)
-//                .set(PASSWORDMANAGEMENT.SECRETKEY, encryptionResult.secretKey)
-//                .set(PASSWORDMANAGEMENT.SALT, encryptionResult.salt)
-//                .set(PASSWORDMANAGEMENT.IV, encryptionResult.iv)
-//                .execute()
+            dslContext.insertInto(PASSWORDMANAGEMENT)
+                .set(PASSWORDMANAGEMENT.USERID, userId)
+                .set(PASSWORDMANAGEMENT.SECRETKEY, encryptionResult.secretKey)
+                .set(PASSWORDMANAGEMENT.SALT, encryptionResult.salt)
+                .set(PASSWORDMANAGEMENT.IV, encryptionResult.iv)
+                .execute()
 
             "redirect:/airline/home"
         } else {
