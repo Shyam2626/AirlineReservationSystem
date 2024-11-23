@@ -15,7 +15,6 @@ class MailService(private val mailSender: JavaMailSender) {
 
     private val logger = LoggerFactory.getLogger(MailService::class.java)
 
-
     private fun generateEmailBody(firstName: String, lastName: String, otp : Long, emailContent : String): String {
 
         val fullName = "$firstName $lastName"
